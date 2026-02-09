@@ -30,7 +30,7 @@ A forum-based website where college alumni can share their career paths and expe
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Shaun420/alumni-career-forum.git
    cd alumni-career-forum
    ```
 
