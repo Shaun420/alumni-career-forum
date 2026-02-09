@@ -127,5 +127,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
+# For development only - allows frontend to make requests from any origin
+# In production, configure CORS_ALLOWED_ORIGINS with specific domains
 CORS_ALLOW_ALL_ORIGINS = True
 
