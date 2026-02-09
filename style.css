@@ -1,0 +1,267 @@
+/* Reset and basic styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #f0f4ff, #dce6ff);
+  color: #333;
+  line-height: 1.6;
+  scroll-behavior: smooth;
+}
+
+/* Header */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 50px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+header .logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #4b6cb7;
+  letter-spacing: 1px;
+}
+
+header nav ul {
+  display: flex;
+  list-style: none;
+}
+
+header nav ul li {
+  margin-left: 30px;
+}
+
+header nav ul li a {
+  text-decoration: none;
+  color: #4b6cb7;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+header nav ul li a:hover {
+  background: #4b6cb7;
+  color: #fff;
+}
+
+/* Hero Section */
+.hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 70vh;
+  background: url('https://images.unsplash.com/photo-1531379410501-1cf399e1a867?auto=format&fit=crop&w=1470&q=80') no-repeat center/cover;
+  color: #fff;
+  padding: 0 20px;
+  position: relative;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 0;
+}
+
+.hero h1, .hero p, .hero .btn {
+  position: relative;
+  z-index: 1;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 12px rgba(0,0,0,0.5);
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  max-width: 600px;
+  text-shadow: 1px 1px 8px rgba(0,0,0,0.5);
+}
+
+.hero .btn {
+  padding: 14px 40px;
+  background: #4b6cb7;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(75,108,183,0.4);
+}
+
+.hero .btn:hover {
+  background: #182848;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(75,108,183,0.6);
+}
+
+/* Sections */
+section {
+  padding: 60px 50px;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 40px;
+  color: #4b6cb7;
+  font-size: 2rem;
+  letter-spacing: 1px;
+}
+
+/* Explore Section */
+.explore .filters {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.explore .filters select {
+  padding: 10px 15px;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  transition: 0.3s;
+}
+
+.explore .filters select:hover {
+  border-color: #4b6cb7;
+}
+
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.post {
+  background: #fff;
+  padding: 25px 20px;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+  transition: all 0.4s;
+  position: relative;
+  overflow: hidden;
+}
+
+.post:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 25px rgba(0,0,0,0.12);
+}
+
+.post h3 {
+  color: #182848;
+  margin-bottom: 8px;
+  font-size: 1.4rem;
+}
+
+.post h4 {
+  color: #4b6cb7;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.post p {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Badge for role */
+.post::before {
+  content: attr(data-category);
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #4b6cb7;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 5px 10px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+/* Submit Section */
+.submit form {
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.submit input, .submit textarea {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.submit input:focus, .submit textarea:focus {
+  border-color: #4b6cb7;
+  outline: none;
+}
+
+.submit button {
+  padding: 14px;
+  background: #4b6cb7;
+  color: #fff;
+  font-size: 1rem;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 5px 15px rgba(75,108,183,0.4);
+}
+
+.submit button:hover {
+  background: #182848;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(75,108,183,0.6);
+}
+
+/* About Section */
+.about p {
+  max-width: 800px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 25px;
+  background: rgba(255,255,255,0.95);
+  color: #4b6cb7;
+  font-weight: 500;
+}
+
+/* Smooth card animation */
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(20px);}
+  100% { opacity: 1; transform: translateY(0);}
+}
+
+.post {
+  animation: fadeInUp 0.6s ease forwards;
+}
