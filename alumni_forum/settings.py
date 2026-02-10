@@ -38,8 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'posts',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -130,4 +132,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # For development only - allows frontend to make requests from any origin
 # In production, configure CORS_ALLOWED_ORIGINS with specific domains
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+# Custom user model
+AUTH_USER_MODEL = 'accounts.User'
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
 
