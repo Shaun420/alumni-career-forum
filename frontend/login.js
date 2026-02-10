@@ -1,4 +1,4 @@
-class LoginForm2 {
+class LoginForm {
     constructor() {
         this.form = document.getElementById('loginForm');
         this.submitBtn = this.form.querySelector('.login-btn');
@@ -228,5 +228,5 @@ class LoginForm2 {
 
 // Initialize login form when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new LoginForm2();
+    new LoginForm();
 });
