@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Alumni Dashboard</title>
+  <link rel="stylesheet" href="alumni_dashboard_style.css">
+</head>
+<script src="alumni_dashboard_script.js"></script>
+<body>
+
+<header class="dashboard-header">
+  <h1>Alumni Career Dashboard</h1>
+  <p>Share your proven roadmap to guide juniors</p>
+</header>
+
+<!-- Explore Section -->
+<section id="explore" class="explore">
+  <h2>Explore Career Paths</h2>
+
+  <div class="filters">
+    <label>Filter by Designation:</label>
+    <select>
+      <option>All</option>
+      <option>Software Engineer</option>
+      <option>Web Developer</option>
+      <option>Cybersecurity Analyst</option>
+      <option>Tester</option>
+    </select>
+  </div>
+
+  <div class="posts">
+    <div class="post-card">
+      <h3>Software Engineer</h3>
+      <h4>Rahul Sharma – Google</h4>
+      <p>
+        Learned DSA → Built projects → Internships → System Design → Cracked interviews.
+      </p>
+    </div>
+
+    <div class="post-card">
+      <h3>Cybersecurity Analyst</h3>
+      <h4>Priya Verma – TCS</h4>
+      <p>
+        Networking basics → Linux → CEH → Practical labs → SOC analyst role.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Submit Section -->
+<section id="submit" class="submit">
+  <h2>Share Your Career Roadmap</h2>
+
+  <form>
+    <input type="text" placeholder="Your Name" required>
+    <input type="text" placeholder="Current Designation" required>
+    <input type="text" placeholder="Company Name" required>
+    <textarea placeholder="Write your step-by-step roadmap..." required></textarea>
+    <button type="submit">Post Roadmap</button>
+  </form>
+</section>
+
+</body>
+</html>
