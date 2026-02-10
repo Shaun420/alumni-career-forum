@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alumni Career Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark"> 
+    
+    <div id="auth-container" class="page-container">
+        <div class="auth-card">
+            <h2 id="auth-title">Student Login</h2>
+            <form id="auth-form">
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" placeholder="student@university.edu" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                    <p id="error-msg" class="error-text"></p>
+                </div>
+                <button type="submit" id="submit-btn" class="btn-primary">Sign In</button>
+            </form>
+            <p class="toggle-text">
+                <span id="toggle-label">New user?</span> 
+                <button id="toggle-auth" class="btn-link">Sign Up</button>
+            </p>
+        </div>
+    </div>
+
+    <div id="dashboard-container" class="hidden">
+        <header class="main-header">
+            <h1>Insight<span class="accent">Hub</span></h1>
+            <div class="header-controls">
+                <button id="theme-toggle" class="btn-theme">🌓 Switch Theme</button>
+                <button onclick="location.reload()" class="btn-logout">Logout</button>
+            </div>
+        </header>
+
+
+        <div class="container">
+    <div class="search-section">
+    <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="skill-search" placeholder="Search by name, role, or skill...">
+    </div>
+    
+    <div class="filter-tags" id="field-filters">
+        <button class="tag-btn active" data-field="all">All Fields</button>
+        <button class="tag-btn" data-field="Cloud">Cloud</button>
+        <button class="tag-btn" data-field="ML">AI & ML</button>
+        <button class="tag-btn" data-field="Security">Security</button>
+        <button class="tag-btn" data-field="Management">Management</button>
+        <button class="tag-btn" data-field="Design">Design</button>
+    </div>
+    
+    <p id="results-count" class="text-dim"></p>
+</div>
+
+    <div class="alumni-grid" id="alumni-list">
+        </div>
+    
+    </div>
+
+        <div class="container">
+            <div class="alumni-grid" id="alumni-list">
+                </div>
+
+            <section class="feedback-section">
+                <div class="feedback-header">
+                    <h3>Student Feedback Form</h3>
+                    <p>Fill out the details below and our team will get back to you shortly.</p>
+                </div>
+                
+                <form id="feedback-form" class="vertical-form">
+                    <div class="form-group">
+                        <label for="student-name">Full Name</label>
+                        <input type="text" id="student-name" placeholder="Enter your full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="student-email">Email Address</label>
+                        <input type="email" id="student-email" placeholder="name@university.edu" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="student-contact">Contact Number</label>
+                        <input type="tel" id="student-contact" placeholder="+1 (555) 000-0000" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="feedback-category">How can we categorize your request?</label>
+                        <select id="feedback-category" required>
+                            <option value="" disabled selected>Select a category</option>
+                            <option value="general">General Feedback</option>
+                            <option value="career">Career Guidance Request</option>
+                            <option value="technical">Technical Support</option>
+                            <option value="alumni-connect">Alumni Connection Request</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="help-text">How can we help you?</label>
+                        <textarea id="help-text" rows="5" placeholder="Describe your requirement or feedback in detail..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary submit-feedback-btn">Send Feedback</button>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
