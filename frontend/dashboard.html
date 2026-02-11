@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Alumni Dashboard | CareerBridge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<header>
+    <h1>Alumni Dashboard</h1>
+    <p>Share your career journey and inspire students!</p>
+</header>
+
+<nav id="mainNav">
+    <a href="index.html">Home</a>
+    <a href="explore.html">Explore Journeys</a>
+    <a href="about.html">About Us</a>
+    <a href="dashboard.html">Dashboard</a>
+    <span id="authLinks">
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+    </span>
+</nav>
+
+<section class="container dashboard-container">
+    <div id="authMessage" class="auth-message" style="display: none;">
+        <p>Please <a href="login.html">log in</a> to access the dashboard.</p>
+    </div>
+
+    <div id="dashboardContent" style="display: none;">
+        <div class="dashboard-welcome">
+            <h2>Welcome, <span id="userName"></span>!</h2>
+            <p>Share your career journey to help students navigate their career paths.</p>
+        </div>
+
+        <div class="submit-section">
+            <h2>Share Your Career Journey</h2>
+            <form id="postForm">
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="role">Your Job Role</label>
+                    <input type="text" id="role" placeholder="e.g., Software Engineer, Web Developer" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="experience">Your Career Experience</label>
+                    <textarea id="experience" placeholder="Share your career journey, challenges, achievements, and advice for students..." required></textarea>
+                </div>
+                
+                <button type="submit">Share My Journey</button>
+            </form>
+        </div>
+
+        <div class="my-posts-section">
+            <h2>My Career Journey Posts</h2>
+            <div id="myPostsContainer" class="posts-grid">
+                <!-- User's posts will be loaded here -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <p>© 2026 InsightHub | All Rights Reserved</p>
+    <p>Bhushan Badhe, Gauresh Aher, Devesh Dabhade, Saurabh Balagide, Shaunak Hawaldar</p>
+</footer>
+
+<script src="form-utils.js"></script>
+<script src="dashboard.js"></script>
+<script>
+    // Check if user is logged in and update the nav
+    document.addEventListener('DOMContentLoaded', () => {
+        const authLinks = document.getElementById('authLinks');
+        
+        // Check if FormUtils is available
+        if (typeof FormUtils !== 'undefined') {
+            const user = FormUtils.getCurrentUser();
+            
+            if (user) {
+                // User is logged in, show username and logout
+                authLinks.innerHTML = `
+                    <span style="color: white; font-weight: 600; margin-right: 15px;">
+                        ${user.username} (${user.role})
+                    </span>
+                    <a href="#" id="logoutBtn" style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 5px;">Logout</a>
+                `;
+                
+                // Add logout handler
+                document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await FormUtils.apiLogout();
+                    window.location.href = 'index.html';
+                });
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -22,7 +22,12 @@ class CommentListCreateView(generics.ListCreateAPIView):
         post_id = self.kwargs.get('post_id')
         return Comment.objects.filter(post_id=post_id)
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         post_id = self.kwargs.get('post_id')
-        serializer.save(post_id=post_id)
+        data = request.data.copy()
+        data['post'] = post_id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data)
 
