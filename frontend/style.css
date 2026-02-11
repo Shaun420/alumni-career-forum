@@ -37,8 +37,8 @@ body {
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(66, 234, 255, 0.3);
-  border: 2px solid #42EAFF;
+  box-shadow: 0 6px 20px rgba(255, 126, 66, 0.3);
+  border: 2px solid #FFB343;
 }
 
 .card h3 {
@@ -54,14 +54,14 @@ body {
 
 .cta {
   background: linear-gradient(135deg, #FF7E42, #FFB343);
-  color: white;
+  color: black;
   text-align: center;
   padding: 60px 20px;
   margin: 40px 0;
 }
 
 .cta h2 {
-  color: white;
+  color: black;
   margin-bottom: 20px;
 }
 
@@ -113,7 +113,7 @@ body {
 /* Header - AlumniPath Connect */
 header {
   background: linear-gradient(135deg, #FF7E42, #FFB343);
-  color: white;
+  color: black;
   text-align: center;
   padding: 60px 20px;
 }
@@ -226,7 +226,7 @@ section {
 h2 {
   text-align: center;
   margin-bottom: 40px;
-  color: #4272FF;
+  /* color: #4272FF; */
   font-size: 2rem;
   letter-spacing: 1px;
 }
@@ -267,8 +267,8 @@ h2 {
 
 .post:hover {
   transform: translateY(-8px);
-  box-shadow: 0 15px 25px rgba(66, 234, 255, 0.3);
-  border: 2px solid #42EAFF;
+	box-shadow: 0 15px 25px rgba(255, 131, 0, 0.3);
+	border: 2px solid #FF7E42;
 }
 
 .post h3 {
@@ -278,7 +278,7 @@ h2 {
 }
 
 .post h4 {
-  color: #FFB343;
+  color: black;
   margin-bottom: 15px;
   font-weight: 500;
 }
