@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CareerBridge | About Us</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>About CareerBridge</h1>
+    <p>Connecting generations, empowering futures</p>
+</header>
+
+<nav id="mainNav">
+    <a href="index.html">Home</a>
+    <a href="about.html">About Us</a>
+    <span id="authLinks">
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+    </span>
+</nav>
+
+<div class="container">
+    <div class="section">
+        <h2>Our Vision</h2>
+        <p>CareerBridge aims to create a strong digital bridge between alumni and current students, enabling knowledge sharing, mentorship, and professional growth in a collaborative environment.</p>
+    </div>
+
+    <div class="section">
+        <h2>Our Mission</h2>
+        <p>Our mission is to provide a centralized platform where alumni can give back to their institutions by guiding students, sharing opportunities, and helping them prepare for real-world challenges.</p>
+    </div>
+
+    <div class="section">
+        <h2>Why This Platform?</h2>
+        <p>Many students struggle with career decisions due to lack of guidance. CareerBridge solves this by bringing experienced alumni closer to students through structured interaction and networking.</p>
+    </div>
+
+    <div class="section">
+        <h2>Who Can Join?</h2>
+        <p>This platform is open to students, alumni, faculty members, and institutions who believe in collaborative growth and lifelong learning.</p>
+    </div>
+</div>
+
+<footer>
+    <p>© 2026 InsightHub</p>
+	<p>Bhushan Badhe, Gauresh Aher, Devesh Dabhade, Saurabh Balagide, Shaunak Hawaldar</p>
+</footer>
+
+<script src="form-utils.js"></script>
+<script>
+    // Check if user is logged in and update the nav
+    document.addEventListener('DOMContentLoaded', () => {
+        const authLinks = document.getElementById('authLinks');
+        
+        // Check if FormUtils is available
+        if (typeof FormUtils !== 'undefined') {
+            const user = FormUtils.getCurrentUser();
+            
+            if (user) {
+                // User is logged in, show username and logout
+                authLinks.innerHTML = `
+                    <span style="color: white; font-weight: 600; margin-right: 15px;">
+                        ${user.username} (${user.role})
+                    </span>
+                    <a href="#" id="logoutBtn" style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 5px;">Logout</a>
+                `;
+                
+                // Add logout handler
+                document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await FormUtils.apiLogout();
+                    window.location.reload();
+                });
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
