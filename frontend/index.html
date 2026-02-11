@@ -13,11 +13,13 @@
     <p>Bridging the gap between alumni and students for mentorship, networking, and career growth.</p>
 </header>
 
-<nav>
+<nav id="mainNav">
     <a href="index.html">Home</a>
     <a href="about.html">About Us</a>
-    <a href="login.html">Login</a>
-    <a href="register.html">Register</a>
+    <span id="authLinks">
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+    </span>
 </nav>
 
 <section class="container">
@@ -85,6 +87,34 @@
 
 <script src="script.js"></script>
 <script src="form-utils.js"></script>
+<script>
+    // Check if user is logged in and update the nav
+    document.addEventListener('DOMContentLoaded', () => {
+        const authLinks = document.getElementById('authLinks');
+        
+        // Check if FormUtils is available
+        if (typeof FormUtils !== 'undefined') {
+            const user = FormUtils.getCurrentUser();
+            
+            if (user) {
+                // User is logged in, show username and logout
+                authLinks.innerHTML = `
+                    <span style="color: white; font-weight: 600; margin-right: 15px;">
+                        ${user.username} (${user.role})
+                    </span>
+                    <a href="#" id="logoutBtn" style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 5px;">Logout</a>
+                `;
+                
+                // Add logout handler
+                document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await FormUtils.apiLogout();
+                    window.location.reload();
+                });
+            }
+        }
+    });
+</script>
 
 </body>
 </html>
