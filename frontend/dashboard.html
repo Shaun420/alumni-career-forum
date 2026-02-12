@@ -2,106 +2,213 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Alumni Dashboard | CareerBridge</title>
+    <title>Dashboard | CareerBridge</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
 
-<header>
-    <h1>Alumni Dashboard</h1>
-    <p>Share your career journey and inspire students!</p>
-</header>
+<div id="app-header"></div>
 
-<nav id="mainNav">
-    <a href="index.html">Home</a>
-    <a href="explore.html">Explore Journeys</a>
-    <a href="about.html">About Us</a>
-    <a href="dashboard.html">Dashboard</a>
-    <span id="authLinks">
-        <a href="login.html">Login</a>
-        <a href="register.html">Register</a>
-    </span>
-</nav>
-
-<section class="container dashboard-container">
-    <div id="authMessage" class="auth-message" style="display: none;">
-        <p>Please <a href="login.html">log in</a> to access the dashboard.</p>
+<!-- Auth Message (shown if not logged in) -->
+<div class="auth-gate" id="authGate" style="display: none;">
+    <div class="auth-gate-content">
+        <div class="auth-gate-icon">🔒</div>
+        <h2>Login Required</h2>
+        <p>Please log in to access your dashboard.</p>
+        <div class="auth-gate-actions">
+            <a href="login.html" class="gate-btn gate-btn-primary">Login</a>
+            <a href="register.html" class="gate-btn gate-btn-secondary">Register</a>
+        </div>
     </div>
+</div>
 
-    <div id="dashboardContent" style="display: none;">
-        <div class="dashboard-welcome">
-            <h2>Welcome, <span id="userName"></span>!</h2>
-            <p>Share your career journey to help students navigate their career paths.</p>
+<!-- Dashboard Content (shown if logged in) -->
+<main class="dashboard-page" id="dashboardContent" style="display: none;">
+    <div class="dashboard-container">
+
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="welcome-content">
+                <div class="welcome-avatar" id="welcomeAvatar">?</div>
+                <div class="welcome-info">
+                    <h1>Welcome back, <span id="welcomeName">User</span>!</h1>
+                    <p class="welcome-role" id="welcomeRole">Student</p>
+                    <p class="welcome-subtitle" id="welcomeSubtitle">Explore career journeys and connect with alumni.</p>
+                </div>
+            </div>
+            <div class="welcome-stats" id="welcomeStats">
+                <!-- Stats will be rendered by JS -->
+            </div>
         </div>
 
-        <div class="submit-section">
-            <h2>Share Your Career Journey</h2>
-            <form id="postForm">
-                <div class="form-group">
-                    <label for="name">Your Name</label>
-                    <input type="text" id="name" placeholder="Enter your full name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="role">Your Job Role</label>
-                    <input type="text" id="role" placeholder="e.g., Software Engineer, Web Developer" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="experience">Your Career Experience</label>
-                    <textarea id="experience" placeholder="Share your career journey, challenges, achievements, and advice for students..." required></textarea>
-                </div>
-                
-                <button type="submit">Share My Journey</button>
-            </form>
-        </div>
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
 
-        <div class="my-posts-section">
-            <h2>My Career Journey Posts</h2>
-            <div id="myPostsContainer" class="posts-grid">
-                <!-- User's posts will be loaded here -->
+            <!-- Left Column -->
+            <div class="dashboard-left">
+
+                <!-- Post Journey Form (Alumni & Admin Only) -->
+                <div class="dash-card" id="postJourneyCard" style="display: none;">
+                    <div class="dash-card-header">
+                        <h2>🚀 Share Your Career Journey</h2>
+                        <p class="dash-card-subtitle">Help students by sharing your career path and experience</p>
+                    </div>
+                    <div class="dash-card-body">
+                        <form id="postForm">
+                            <div class="form-group">
+                                <label for="postName">Your Name</label>
+                                <input type="text" id="postName" placeholder="Enter your full name" required>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="postRole">Job Role</label>
+                                    <input type="text" id="postRole" placeholder="e.g., Software Engineer" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="postCompany">Company</label>
+                                    <input type="text" id="postCompany" placeholder="e.g., Google">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="postCategory">Career Category</label>
+                                <select id="postCategory" required>
+                                    <option value="">Select a category</option>
+                                    <option value="software-engineer">Software Engineer</option>
+                                    <option value="web-developer">Web Developer</option>
+                                    <option value="cybersecurity-analyst">Cybersecurity Analyst</option>
+                                    <option value="tester">Tester</option>
+                                    <option value="data-scientist">Data Scientist</option>
+                                    <option value="devops-engineer">DevOps Engineer</option>
+                                    <option value="mobile-developer">Mobile Developer</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="postSkills">Key Skills (comma-separated)</label>
+                                <input type="text" id="postSkills" placeholder="e.g., Python, JavaScript, SQL">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="postExperience">Your Career Journey</label>
+                                <textarea id="postExperience" rows="6" placeholder="Share your career journey, challenges, achievements, tips, and advice for students..." required></textarea>
+                                <span class="char-count"><span id="expCharCount">0</span>/2000</span>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="reset" class="form-btn form-btn-secondary">Clear</button>
+                                <button type="submit" class="form-btn form-btn-primary" id="submitPostBtn">
+                                    <span class="btn-text">Share Journey</span>
+                                    <span class="btn-loading" style="display: none;">Publishing...</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Student Info Card (Students Only) -->
+                <div class="dash-card student-info-card" id="studentInfoCard" style="display: none;">
+                    <div class="dash-card-header">
+                        <h2>📚 Student Dashboard</h2>
+                    </div>
+                    <div class="dash-card-body">
+                        <div class="student-info-content">
+                            <div class="student-info-icon">💬</div>
+                            <h3>Engage with Alumni</h3>
+                            <p>As a student, you can explore career journeys shared by alumni and post comments to ask questions, share insights, or seek advice.</p>
+                            <div class="student-actions">
+                                <a href="explore.html" class="form-btn form-btn-primary">🔍 Explore Journeys</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column -->
+            <div class="dashboard-right">
+
+                <!-- My Journey Posts (Alumni & Admin) -->
+                <div class="dash-card" id="myPostsCard" style="display: none;">
+                    <div class="dash-card-header">
+                        <h2>📝 My Journey Posts</h2>
+                        <span class="post-count-badge" id="postCountBadge">0</span>
+                    </div>
+                    <div class="dash-card-body">
+                        <div id="myPostsList" class="my-posts-list">
+                            <div class="loading-placeholder">
+                                <div class="loading-spinner"></div>
+                                <p>Loading your posts...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Comments (All Users) -->
+                <div class="dash-card" id="myCommentsCard">
+                    <div class="dash-card-header">
+                        <h2>💬 My Comments</h2>
+                        <span class="post-count-badge" id="commentCountBadge">0</span>
+                    </div>
+                    <div class="dash-card-body">
+                        <div id="myCommentsList" class="my-comments-list">
+                            <div class="loading-placeholder">
+                                <div class="loading-spinner"></div>
+                                <p>Loading your comments...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="dash-card">
+                    <div class="dash-card-header">
+                        <h2>🔗 Quick Links</h2>
+                    </div>
+                    <div class="dash-card-body quick-links-body">
+                        <a href="explore.html" class="quick-link">
+                            <span class="quick-link-icon">🔍</span>
+                            <div class="quick-link-info">
+                                <span class="quick-link-title">Explore Journeys</span>
+                                <span class="quick-link-desc">Browse alumni career paths</span>
+                            </div>
+                            <span class="quick-link-arrow">→</span>
+                        </a>
+                        <a href="profile.html" class="quick-link">
+                            <span class="quick-link-icon">👤</span>
+                            <div class="quick-link-info">
+                                <span class="quick-link-title">My Profile</span>
+                                <span class="quick-link-desc">Edit your profile details</span>
+                            </div>
+                            <span class="quick-link-arrow">→</span>
+                        </a>
+                        <a href="about.html" class="quick-link">
+                            <span class="quick-link-icon">ℹ️</span>
+                            <div class="quick-link-info">
+                                <span class="quick-link-title">About CareerBridge</span>
+                                <span class="quick-link-desc">Learn about our mission</span>
+                            </div>
+                            <span class="quick-link-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-</section>
+</main>
 
-<footer>
-    <p>© 2026 InsightHub | All Rights Reserved</p>
+<footer class="dashboard-footer">
+    <p>&copy; 2026 CareerBridge | Alumni Career Pathway Forum</p>
     <p>Bhushan Badhe, Gauresh Aher, Devesh Dabhade, Saurabh Balagide, Shaunak Hawaldar</p>
 </footer>
 
+<script src="header.js"></script>
 <script src="form-utils.js"></script>
 <script src="dashboard.js"></script>
-<script>
-    // Check if user is logged in and update the nav
-    document.addEventListener('DOMContentLoaded', () => {
-        const authLinks = document.getElementById('authLinks');
-        
-        // Check if FormUtils is available
-        if (typeof FormUtils !== 'undefined') {
-            const user = FormUtils.getCurrentUser();
-            
-            if (user) {
-                // User is logged in, show username and logout
-                authLinks.innerHTML = `
-                    <span style="color: white; font-weight: 600; margin-right: 15px;">
-                        ${user.username} (${user.role})
-                    </span>
-                    <a href="#" id="logoutBtn" style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 5px;">Logout</a>
-                `;
-                
-                // Add logout handler
-                document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    await FormUtils.apiLogout();
-                    window.location.href = 'index.html';
-                });
-            }
-        }
-    });
-</script>
 
 </body>
 </html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - CareerBridge Alumni Forum</title>
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <main class="profile-page">
+        <div class="profile-container">
+
+            <!-- Profile Header -->
+            <div class="profile-hero">
+                <div class="profile-hero-bg">
+                    <div class="profile-hero-content">
+                        <div class="profile-avatar-large" id="profileAvatar">?</div>
+                        <div class="profile-hero-info">
+                            <h1 id="profileFullName">Loading...</h1>
+                            <p class="profile-username" id="profileUsername">@username</p>
+                            <span class="profile-role-badge" id="profileRoleBadge">User</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Content -->
+            <div class="profile-content">
+
+                <!-- Left Column: Info Cards -->
+                <div class="profile-sidebar">
+
+                    <!-- Account Info Card -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <h3>📋 Account Info</h3>
+                        </div>
+                        <div class="profile-card-body">
+                            <div class="info-item">
+                                <span class="info-label">Username</span>
+                                <span class="info-value" id="infoUsername">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Email</span>
+                                <span class="info-value" id="infoEmail">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Role</span>
+                                <span class="info-value">
+                                    <span class="role-tag" id="infoRole">-</span>
+                                    <span class="role-locked" title="Role cannot be changed after registration">🔒</span>
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Member Since</span>
+                                <span class="info-value" id="infoJoined">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic Info Card -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <h3>🎓 Academic Info</h3>
+                        </div>
+                        <div class="profile-card-body">
+                            <div class="info-item">
+                                <span class="info-label">Department</span>
+                                <span class="info-value" id="infoDepartment">Not set</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Graduation Year</span>
+                                <span class="info-value" id="infoGraduationYear">Not set</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Edit Forms -->
+                <div class="profile-main">
+
+                    <!-- Edit Profile Form -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <h3>✏️ Edit Profile</h3>
+                            <p class="card-subtitle">Update your personal information</p>
+                        </div>
+                        <div class="profile-card-body">
+                            <form id="editProfileForm">
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="editFirstName">First Name</label>
+                                        <input type="text" id="editFirstName" name="first_name" placeholder="Enter first name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editLastName">Last Name</label>
+                                        <input type="text" id="editLastName" name="last_name" placeholder="Enter last name">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editEmail">Email Address</label>
+                                    <input type="email" id="editEmail" name="email" placeholder="Enter email" required>
+                                </div>
+
+                                <!-- Role (Read Only) -->
+                                <div class="form-group">
+                                    <label for="editRole">
+                                        Role
+                                        <span class="label-badge locked">Cannot be changed</span>
+                                    </label>
+                                    <div class="readonly-field">
+                                        <input type="text" id="editRole" readonly disabled>
+                                        <span class="lock-icon">🔒</span>
+                                    </div>
+                                    <span class="form-hint">Role is assigned during registration and cannot be modified.</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editDepartment">Department</label>
+                                    <input type="text" id="editDepartment" name="department" placeholder="e.g., Computer Science">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editGraduationYear">Graduation Year</label>
+                                    <input type="number" id="editGraduationYear" name="graduation_year" placeholder="e.g., 2024" min="1950" max="2040">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editBio">Bio</label>
+                                    <textarea id="editBio" name="bio" rows="4" placeholder="Tell us about yourself, your interests, career goals..."></textarea>
+                                    <span class="char-counter"><span id="bioCharCount">0</span>/500</span>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary" id="resetProfileBtn">Reset Changes</button>
+                                    <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+                                        <span class="btn-text">Save Changes</span>
+                                        <span class="btn-spinner" style="display: none;">Saving...</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Change Password Form -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <h3>🔐 Change Password</h3>
+                            <p class="card-subtitle">Update your account password</p>
+                        </div>
+                        <div class="profile-card-body">
+                            <form id="changePasswordForm">
+
+                                <div class="form-group">
+                                    <label for="currentPassword">Current Password</label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="currentPassword" name="old_password" placeholder="Enter current password" required>
+                                        <button type="button" class="password-toggle" data-target="currentPassword">👁️</button>
+                                    </div>
+                                    <span class="error-text" id="currentPasswordError"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="newPassword">New Password</label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="newPassword" name="new_password" placeholder="Enter new password" required minlength="8">
+                                        <button type="button" class="password-toggle" data-target="newPassword">👁️</button>
+                                    </div>
+                                    <div class="password-strength-bar">
+                                        <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                                    </div>
+                                    <span class="password-strength-text" id="passwordStrengthText"></span>
+                                    <span class="error-text" id="newPasswordError"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="confirmNewPassword">Confirm New Password</label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="confirmNewPassword" name="new_password2" placeholder="Confirm new password" required minlength="8">
+                                        <button type="button" class="password-toggle" data-target="confirmNewPassword">👁️</button>
+                                    </div>
+                                    <span class="error-text" id="confirmNewPasswordError"></span>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-warning" id="changePasswordBtn">
+                                        <span class="btn-text">Change Password</span>
+                                        <span class="btn-spinner" style="display: none;">Changing...</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="profile-card danger-zone">
+                        <div class="profile-card-header">
+                            <h3>⚠️ Danger Zone</h3>
+                        </div>
+                        <div class="profile-card-body">
+                            <div class="danger-item">
+                                <div class="danger-info">
+                                    <h4>Delete Account</h4>
+                                    <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+                                </div>
+                                <button class="btn btn-danger" id="deleteAccountBtn">Delete Account</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="profile-footer">
+        <p>&copy; 2026 CareerBridge | Alumni Career Pathway Forum</p>
+    </footer>
+
+    <script src="header.js"></script>
+    <script src="form-utils.js"></script>
+    <script src="profile.js"></script>
+</body>
+</html>
