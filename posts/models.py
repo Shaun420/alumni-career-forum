@@ -90,3 +90,22 @@ class Comment(models.Model):
     def author_name(self):
         """Return the username as author_name for API compatibility"""
         return self.user.username
+
+class Like(models.Model):
+    """Likes on posts - requires authentication"""
+    post = models.ForeignKey(
+        Post, 
+        on_delete=models.CASCADE, 
+        related_name='Like_likes'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE,
+        related_name='Like_likes'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return str(self.user.username)
