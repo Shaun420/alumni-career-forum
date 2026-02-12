@@ -62,16 +62,17 @@ class PostSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     skills_list = serializers.SerializerMethodField()
     category_display = serializers.CharField(source='get_category_display', read_only=True)
+    author_name = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Post
         fields = [
-            'id', 'name', 'email', 'role', 'category', 'category_display',
+            'id', 'name', 'author_name', 'email', 'role', 'category', 'category_display',
             'company', 'experience', 'skills', 'skills_list',
             'graduation_year', 'linkedin_url', 'likes',
             'created_at', 'updated_at', 'comments', 'comments_count'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'likes']
+        read_only_fields = ['author_name', 'created_at', 'updated_at', 'likes']
 
     def get_comments_count(self, obj):
         return obj.comments.count()

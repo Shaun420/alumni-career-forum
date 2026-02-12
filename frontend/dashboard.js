@@ -260,10 +260,14 @@ class Dashboard {
             
             // Filter by current user
             const username = this.user.username.toLowerCase();
+			console.log("Username:", username);
+			
             this.userPosts = allPosts.filter(post => {
                 // Match by user ID if available, otherwise by name
                 if (post.user === this.user.id) return true;
-                if (post.name && post.name.toLowerCase() === username) return true;
+                if (post.author_name && post.author_name.toLowerCase() === username) return true;
+				console.log("Post name:", post.name.toLowerCase());
+				console.log("Comparison:", post.name.toLowerCase() === username);
                 return false;
             });
             
