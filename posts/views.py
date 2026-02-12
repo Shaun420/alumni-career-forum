@@ -72,7 +72,11 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class PostLikeView(APIView):
     """Like a post"""
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        post = get_object(Post, pk=pk)
+        return Response({'likes': post.likes, 'has_liked': False})
 
     def post(self, request, pk):
         post = get_object_or_404(Post, pk=pk)

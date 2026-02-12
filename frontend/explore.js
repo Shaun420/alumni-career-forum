@@ -284,7 +284,7 @@ function renderDetailView(post) {
         <!-- Comments -->
         <div class="comments-card">
             <div class="comments-header">
-                <h3>💬 Comments</h3>
+                <h3>Comments</h3>
                 <span class="comments-count-badge" id="detail-comment-count">${comments.length}</span>
             </div>
             <div class="comments-body">
@@ -381,7 +381,7 @@ function renderCommentForm(postId) {
     const roleBadgeClass = userRole === 'admin' ? 'admin' : userRole;
 
     return `
-        <div class="comment-form-title">💭 Add a Comment</div>
+        <div class="comment-form-title">✏️ Add a Comment</div>
         <form class="comment-compose comment-compose-form" data-post-id="${postId}">
             <div class="comment-compose-header">
                 <span class="comment-avatar" style="width:28px;height:28px;font-size:0.75rem;">${escapeHtml(user.username.charAt(0).toUpperCase())}</span>
