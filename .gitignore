@@ -41,3 +41,6 @@ media/
 # Environment
 .env
 .venv
+
+# folders
+ppt/

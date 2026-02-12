@@ -9,31 +9,37 @@
 </head>
 <body>
 
-<header>
-    <h1>Explore Career Journeys</h1>
+<!-- <header>
+    <h1>🔍 Explore Career Journeys</h1>
     <p>Browse alumni career paths and learn from their experiences. Ask questions and share insights in the comments!</p>
 </header>
 
 <nav id="mainNav">
     <a href="index.html">Home</a>
-    <a href="explore.html">Explore Journeys</a>
+    <a href="explore.html" class="active">Explore Journeys</a>
     <a href="about.html">About Us</a>
     <a href="dashboard.html">Dashboard</a>
     <span id="authLinks">
         <a href="login.html">Login</a>
         <a href="register.html">Register</a>
     </span>
-</nav>
+</nav> -->
+
+<!-- Header will be auto-generated here -->
+<div id="app-header"></div>
 
 <section class="container explore-section">
     <div class="filters">
-        <label for="categoryFilter">Filter by Career:</label>
+        <label for="categoryFilter">🎯 Filter by Career Path:</label>
         <select id="categoryFilter">
             <option value="all">All Careers</option>
             <option value="software-engineer">Software Engineer</option>
             <option value="web-developer">Web Developer</option>
             <option value="cybersecurity-analyst">Cybersecurity Analyst</option>
             <option value="tester">Tester</option>
+            <option value="data-scientist">Data Scientist</option>
+            <option value="devops-engineer">DevOps Engineer</option>
+            <option value="mobile-developer">Mobile Developer</option>
         </select>
     </div>
 
@@ -43,40 +49,13 @@
 </section>
 
 <footer>
-    <p>© 2026 InsightHub | All Rights Reserved</p>
+    <p>© 2026 CareerBridge | Alumni Career Pathway Forum</p>
     <p>Bhushan Badhe, Gauresh Aher, Devesh Dabhade, Saurabh Balagide, Shaunak Hawaldar</p>
 </footer>
 
+<script src="header.js"></script>
 <script src="form-utils.js"></script>
 <script src="explore.js"></script>
-<script>
-    // Check if user is logged in and update the nav
-    document.addEventListener('DOMContentLoaded', () => {
-        const authLinks = document.getElementById('authLinks');
-        
-        // Check if FormUtils is available
-        if (typeof FormUtils !== 'undefined') {
-            const user = FormUtils.getCurrentUser();
-            
-            if (user) {
-                // User is logged in, show username and logout
-                authLinks.innerHTML = `
-                    <span style="color: white; font-weight: 600; margin-right: 15px;">
-                        ${user.username} (${user.role})
-                    </span>
-                    <a href="#" id="logoutBtn" style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 5px;">Logout</a>
-                `;
-                
-                // Add logout handler
-                document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    await FormUtils.apiLogout();
-                    window.location.reload();
-                });
-            }
-        }
-    });
-</script>
 
 </body>
 </html>

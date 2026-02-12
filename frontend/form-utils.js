@@ -49,14 +49,42 @@ const FormUtils = {
             });
 
             const data = await response.json();
+			console.log('Login response:', response.status);
 
             if (response.ok) {
-                // Store token and user data
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('userData', JSON.stringify(data.user));
-                return { success: true, data };
+                // IMPORTANT: Store token and user data immediately
+                if (data.token) {
+                    this.setToken(data.token);
+                    console.log('Token saved successfully');
+                } else {
+                    console.error('No token in login response!');
+                }
+                
+                if (data.user) {
+                    this.setCurrentUser(data.user);
+                    console.log('User saved:', data.user.username);
+                }
+                return {
+					success: true,
+					user: data.user,
+					token: data.token,
+					message: data.message || 'Login successful',
+				};
             } else {
-                return { success: false, error: data };
+                let errorMessage = 'Invalid credentials';
+                
+                if (data.error) {
+                    errorMessage = typeof data.error === 'string' ? data.error : 'Login failed';
+                } else if (data.non_field_errors) {
+                    errorMessage = Array.isArray(data.non_field_errors) 
+                        ? data.non_field_errors[0] 
+                        : data.non_field_errors;
+                }
+                
+                return {
+                    success: false,
+                    error: { message: errorMessage, ...data }
+                };
             }
         } catch (error) {
             console.error('Login error:', error);
@@ -76,12 +104,22 @@ const FormUtils = {
             });
 
             const data = await response.json();
+			console.log('Register response:', response.status, data);
 
             if (response.ok) {
                 // Store token and user data
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('userData', JSON.stringify(data.user));
-                return { success: true, data };
+                if (data.token) {
+                    this.setToken(data.token);
+                }
+                if (data.user) {
+                    this.setCurrentUser(data.user);
+                }
+                return {
+					success: true,
+					user: data.user,
+					token: data.token,
+					message: data.message || 'Registration successful'
+				};
             } else {
                 return { success: false, error: data };
             }
@@ -94,7 +132,7 @@ const FormUtils = {
     // API call to logout endpoint
     async apiLogout() {
         try {
-            const token = localStorage.getItem('authToken');
+            const token = this.getToken();
             if (token) {
                 await fetch('http://localhost:8000/api/auth/logout/', {
                     method: 'POST',
@@ -117,15 +155,224 @@ const FormUtils = {
         }
     },
 
+	    /**
+     * Get current user profile from API
+     * FIXED: Now properly sends Authorization header
+     */
+    async apiGetProfile() {
+        try {
+            const headers = this.getAuthHeaders();
+            console.log('Fetching profile with headers:', headers);
+            
+            const response = await fetch(`${this.AUTH_URL}/profile/`, {
+                method: 'GET',
+                headers: headers  // This includes the Authorization token
+            });
+            
+            console.log('Profile response status:', response.status);
+            
+            if (response.ok) {
+                const user = await response.json();
+                this.setCurrentUser(user);
+                return { success: true, user: user };
+            } else if (response.status === 401) {
+                console.log('Token invalid, clearing auth');
+                this.clearAuth();
+                return { success: false, error: 'Session expired' };
+            } else {
+                return { success: false, error: 'Failed to get profile' };
+            }
+        } catch (error) {
+            console.error('Get profile API error:', error);
+            return { success: false, error: 'Network error' };
+        }
+    },
+    
+    /**
+     * Check authentication status
+     */
+    async checkAuth() {
+        const token = this.getToken();
+        
+        if (!token) {
+            console.log('No token, not authenticated');
+            return { isAuthenticated: false, user: null };
+        }
+        
+        console.log('Checking auth with token...');
+        
+        try {
+            const response = await fetch(`${this.AUTH_URL}/check/`, {
+                method: 'GET',
+                headers: this.getAuthHeaders()  // Include Authorization token
+            });
+            
+            console.log('Auth check response:', response.status);
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.isAuthenticated && data.user) {
+                    this.setCurrentUser(data.user);
+                    return { isAuthenticated: true, user: data.user };
+                }
+            }
+        } catch (error) {
+            console.error('Auth check error:', error);
+        }
+        
+        this.clearAuth();
+        return { isAuthenticated: false, user: null };
+    },
+    
+    /**
+     * Verify token is still valid
+     */
+    async verifyToken() {
+        const token = this.getToken();
+        
+        if (!token) {
+            return false;
+        }
+        
+        try {
+            const response = await fetch(`${this.AUTH_URL}/profile/`, {
+                method: 'GET',
+                headers: this.getAuthHeaders()
+            });
+            
+            if (response.ok) {
+                const user = await response.json();
+                this.setCurrentUser(user);
+                return true;
+            }
+        } catch (error) {
+            console.error('Token verification error:', error);
+        }
+        
+        this.clearAuth();
+        return false;
+    },
+    /**
+     * Update user profile
+     */
+    async apiUpdateProfile(profileData) {
+        try {
+            const response = await fetch(`${this.AUTH_URL}/profile/`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),  // Include token!
+                body: JSON.stringify(profileData)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                const user = data.user || data;
+                this.setCurrentUser(user);
+                return { success: true, user: user };
+            } else {
+                return { success: false, error: data };
+            }
+        } catch (error) {
+            console.error('Update profile API error:', error);
+            return { success: false, error: { message: 'Network error' } };
+        }
+    },
+
+	/**
+     * Change password
+     */
+    async apiChangePassword(oldPassword, newPassword) {
+        try {
+            const response = await fetch(`${this.AUTH_URL}/change-password/`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({
+                    old_password: oldPassword,
+                    new_password: newPassword,
+                    new_password2: newPassword
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Update token if returned
+                if (data.token) {
+                    this.setToken(data.token);
+                }
+                return {
+                    success: true,
+                    message: data.message || 'Password changed successfully'
+                };
+            } else {
+                return {
+                    success: false,
+                    error: data
+                };
+            }
+        } catch (error) {
+            console.error('Change password API error:', error);
+            return {
+                success: false,
+                error: { message: 'Network error' }
+            };
+        }
+    },
+    
+	getToken() {
+        return localStorage.getItem('authToken');
+    },
+    
+    setToken(token) {
+        if (token) {
+            localStorage.setItem('authToken', token);
+            console.log('Token stored:', token.substring(0, 10) + '...');
+        }
+    },
+    
+    clearAuth() {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        console.log('Auth cleared');
+    },
     // Get current user data
     getCurrentUser() {
-        const userData = localStorage.getItem('userData');
-        return userData ? JSON.parse(userData) : null;
+        try {
+            const user = localStorage.getItem('userData');
+            return user ? JSON.parse(user) : null;
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            return null;
+        }
+    },
+
+	setCurrentUser(user) {
+        if (user) {
+            localStorage.setItem('userData', JSON.stringify(user));
+        }
     },
 
     // Check if user is logged in
     isLoggedIn() {
-        return !!localStorage.getItem('authToken');
+        const token = this.getToken();
+        console.log('isLoggedIn check, token exists:', !!token);
+        return !!token;
+    },
+
+	getAuthHeaders() {
+        const token = this.getToken();
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Token ${token}`;
+            console.log('Auth header set with token');
+        } else {
+            console.warn('No token available for auth header');
+        }
+        
+        return headers;
     },
 
     // Show notification

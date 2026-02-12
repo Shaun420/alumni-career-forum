@@ -1,3 +1,6 @@
+/**
+ * Register Form Handler
+ */
 class RegisterForm {
     constructor() {
         this.form = document.getElementById('registerForm');
@@ -13,6 +16,9 @@ class RegisterForm {
             email: FormUtils.validateEmail,
             password: FormUtils.validatePassword,
             confirmPassword: (value) => {
+                if (!value || value.trim() === '') {
+                    return { isValid: false, message: 'Please confirm your password' };
+                }
                 if (value !== this.passwordInput.value) {
                     return { isValid: false, message: 'Passwords do not match' };
                 }
@@ -54,10 +60,19 @@ class RegisterForm {
                 input.addEventListener('input', () => this.clearError(fieldName));
             }
         });
+        
+        // Re-validate confirm password when password changes
+        this.passwordInput.addEventListener('input', () => {
+            if (this.confirmPasswordInput.value) {
+                this.validateField('confirmPassword');
+            }
+        });
     }
     
     setupPasswordToggles() {
         const togglePassword = (toggleBtn, passwordField) => {
+            if (!toggleBtn || !passwordField) return;
+            
             toggleBtn.addEventListener('click', () => {
                 const type = passwordField.type === 'password' ? 'text' : 'password';
                 passwordField.type = type;
@@ -78,12 +93,8 @@ class RegisterForm {
             const strength = this.calculatePasswordStrength(password);
             
             this.passwordStrengthBar.className = 'password-strength-bar';
-            if (strength === 'weak') {
-                this.passwordStrengthBar.classList.add('weak');
-            } else if (strength === 'medium') {
-                this.passwordStrengthBar.classList.add('medium');
-            } else if (strength === 'strong') {
-                this.passwordStrengthBar.classList.add('strong');
+            if (password.length > 0) {
+                this.passwordStrengthBar.classList.add(strength);
             }
         });
     }
@@ -93,10 +104,11 @@ class RegisterForm {
         
         let strength = 0;
         if (password.length >= 8) strength++;
+        if (password.length >= 12) strength++;
         if (password.match(/[a-z]+/)) strength++;
         if (password.match(/[A-Z]+/)) strength++;
         if (password.match(/[0-9]+/)) strength++;
-        if (password.match(/[$@#&!]+/)) strength++;
+        if (password.match(/[$@#&!%^*()]+/)) strength++;
         
         if (strength <= 2) return 'weak';
         if (strength <= 4) return 'medium';
@@ -121,46 +133,60 @@ class RegisterForm {
     
     validateField(fieldName) {
         const input = document.getElementById(fieldName);
-        const errorElement = document.getElementById(`${fieldName}Error`);
         const validator = this.validators[fieldName];
         
-        if (validator) {
-            const result = validator(input.value);
-            if (!result.isValid) {
-                this.showError(fieldName, result.message);
-                return false;
-            } else {
-                this.clearError(fieldName);
-                return true;
-            }
+        if (!input || !validator) return true;
+        
+        const result = validator(input.value);
+        if (!result.isValid) {
+            this.showError(fieldName, result.message);
+            return false;
+        } else {
+            this.clearError(fieldName);
+            return true;
         }
-        return true;
     }
     
     showError(fieldName, message) {
         const input = document.getElementById(fieldName);
         const errorElement = document.getElementById(`${fieldName}Error`);
         
-        input.classList.add('error');
-        errorElement.textContent = message;
-        input.classList.add('shake');
-        setTimeout(() => input.classList.remove('shake'), 500);
+        if (input) {
+            input.classList.add('error');
+            input.classList.add('shake');
+            setTimeout(() => input.classList.remove('shake'), 500);
+        }
+        
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
     }
     
     clearError(fieldName) {
         const input = document.getElementById(fieldName);
         const errorElement = document.getElementById(`${fieldName}Error`);
         
-        input.classList.remove('error');
+        if (input) {
+            input.classList.remove('error');
+        }
+        
         if (errorElement) {
             errorElement.textContent = '';
         }
+    }
+    
+    clearAllErrors() {
+        const fields = ['username', 'email', 'password', 'confirmPassword', 'role'];
+        fields.forEach(fieldName => this.clearError(fieldName));
     }
     
     async handleSubmit(e) {
         e.preventDefault();
         
         if (this.isSubmitting) return;
+        
+        // Clear previous errors
+        this.clearAllErrors();
         
         // Validate all required fields
         const validations = [
@@ -172,6 +198,7 @@ class RegisterForm {
         ];
         
         if (!validations.every(v => v)) {
+            FormUtils.showNotification('Please fix the errors above', 'error');
             return;
         }
         
@@ -181,56 +208,45 @@ class RegisterForm {
         
         // Prepare user data
         const userData = {
-            username: document.getElementById('username').value,
-            email: document.getElementById('email').value,
+            username: document.getElementById('username').value.trim(),
+            email: document.getElementById('email').value.trim(),
             password: document.getElementById('password').value,
             role: document.getElementById('role').value,
-            first_name: document.getElementById('firstName').value || '',
-            last_name: document.getElementById('lastName').value || '',
+            first_name: document.getElementById('firstName').value.trim() || '',
+            last_name: document.getElementById('lastName').value.trim() || '',
         };
         
         // Add optional fields if provided
         const graduationYear = document.getElementById('graduationYear').value;
-        const department = document.getElementById('department').value;
-        const bio = document.getElementById('bio').value;
+        const department = document.getElementById('department').value.trim();
+        const bio = document.getElementById('bio').value.trim();
         
-        if (graduationYear) userData.graduation_year = parseInt(graduationYear);
-        if (department) userData.department = department;
-        if (bio) userData.bio = bio;
+        if (graduationYear) {
+            userData.graduation_year = parseInt(graduationYear);
+        }
+        if (department) {
+            userData.department = department;
+        }
+        if (bio) {
+            userData.bio = bio;
+        }
         
         try {
-            // Call the API register
             const result = await FormUtils.apiRegister(userData);
             
             if (result.success) {
                 // Show success message
                 this.showSuccess();
                 
+                FormUtils.showNotification('Registration successful!', 'success');
+                
                 // Redirect after 1.5 seconds
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1500);
             } else {
-                // Show error
-                let errorMessage = 'Registration failed. Please try again.';
-                
-                // Handle specific field errors
-                if (result.error.username) {
-                    this.showError('username', result.error.username[0]);
-                }
-                if (result.error.email) {
-                    this.showError('email', result.error.email[0]);
-                }
-                if (result.error.password) {
-                    this.showError('password', result.error.password[0]);
-                }
-                if (result.error.message) {
-                    errorMessage = result.error.message;
-                }
-                
-                FormUtils.showNotification(errorMessage, 'error');
-                this.form.classList.add('shake');
-                setTimeout(() => this.form.classList.remove('shake'), 500);
+                // Handle errors
+                this.handleRegistrationErrors(result.error);
                 
                 this.isSubmitting = false;
                 this.submitBtn.classList.remove('loading');
@@ -238,12 +254,62 @@ class RegisterForm {
             }
         } catch (error) {
             console.error('Registration error:', error);
-            FormUtils.showNotification('An error occurred. Please try again.', 'error');
+            FormUtils.showNotification('An unexpected error occurred. Please try again.', 'error');
             
             this.isSubmitting = false;
             this.submitBtn.classList.remove('loading');
             this.submitBtn.disabled = false;
         }
+    }
+    
+    handleRegistrationErrors(errors) {
+        let hasFieldError = false;
+        
+        // Handle specific field errors
+        if (errors.username) {
+            const msg = Array.isArray(errors.username) ? errors.username[0] : errors.username;
+            this.showError('username', msg);
+            hasFieldError = true;
+        }
+        
+        if (errors.email) {
+            const msg = Array.isArray(errors.email) ? errors.email[0] : errors.email;
+            this.showError('email', msg);
+            hasFieldError = true;
+        }
+        
+        if (errors.password) {
+            const msg = Array.isArray(errors.password) ? errors.password[0] : errors.password;
+            this.showError('password', msg);
+            hasFieldError = true;
+        }
+        
+        if (errors.role) {
+            const msg = Array.isArray(errors.role) ? errors.role[0] : errors.role;
+            this.showError('role', msg);
+            hasFieldError = true;
+        }
+        
+        // Show general error notification
+        let errorMessage = 'Registration failed. Please check the form and try again.';
+        
+        if (errors.message) {
+            errorMessage = errors.message;
+        } else if (errors.non_field_errors) {
+            errorMessage = Array.isArray(errors.non_field_errors) 
+                ? errors.non_field_errors[0] 
+                : errors.non_field_errors;
+        } else if (errors.error) {
+            errorMessage = typeof errors.error === 'string' 
+                ? errors.error 
+                : 'Registration failed.';
+        }
+        
+        FormUtils.showNotification(errorMessage, 'error');
+        
+        // Shake the form
+        this.form.classList.add('shake');
+        setTimeout(() => this.form.classList.remove('shake'), 500);
     }
     
     showSuccess() {
