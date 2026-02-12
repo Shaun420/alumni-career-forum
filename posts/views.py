@@ -13,29 +13,49 @@ from .serializers import (
 )
 
 
-class PostListCreateView(generics.ListCreateAPIView):
+class PostListCreateView(APIView):
     """
-    GET: List all posts (public)
-    POST: Create a new post (public for now, can be restricted)
+    GET: List all posts
+    POST: Create a new post (alumni and admin only)
     """
-    permission_classes = [AllowAny]
-
-    def get_serializer_class(self):
+    permission_classes = []
+    
+    def get_permissions(self):
+        from rest_framework.permissions import AllowAny, IsAuthenticated
         if self.request.method == 'POST':
-            return PostCreateSerializer
-        return PostSerializer
+            return [IsAuthenticated()]
+        return [AllowAny()]
 
-    def get_queryset(self):
-        queryset = Post.objects.filter(is_approved=True)
-        category = self.request.query_params.get('category', None)
+    def get(self, request):
+        posts = Post.objects.filter(is_approved=True)
+        
+        category = request.query_params.get('category')
         if category and category != 'all':
-            queryset = queryset.filter(category=category)
-        return queryset
+            posts = posts.filter(category=category)
+        
+        serializer = PostSerializer(posts, many=True, context={'request': request})
+        return Response(serializer.data)
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
+    def post(self, request):
+        # Check if user has permission to post journeys
+        user = request.user
+        user_role = getattr(user, 'role', '').lower()
+        
+        if user_role == 'student' and not user.is_staff:
+            return Response(
+                {'error': 'Only alumni and admins can post career journeys. Students can post comments on existing journeys.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        serializer = PostCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            post = Post.objects.get(id=serializer.instance.id)
+            return Response(
+                PostSerializer(post, context={'request': request}).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -171,14 +191,19 @@ class CommentDetailView(APIView):
 
 
 class UserCommentsView(APIView):
-    """Get all comments by the current user"""
+    """Get all comments by the current user with post context"""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        comments = Comment.objects.filter(user=request.user)
-        serializer = CommentSerializer(
-            comments, 
-            many=True, 
-            context={'request': request}
-        )
-        return Response(serializer.data)
+        comments = Comment.objects.filter(user=request.user).select_related('post')
+        
+        comments_data = []
+        for comment in comments:
+            comment_dict = CommentSerializer(comment, context={'request': request}).data
+            # Add post context
+            comment_dict['post_title'] = comment.post.role if comment.post else 'Unknown'
+            comment_dict['post_id'] = comment.post.id if comment.post else None
+            comment_dict['post_author'] = comment.post.name if comment.post else 'Unknown'
+            comments_data.append(comment_dict)
+        
+        return Response(comments_data)

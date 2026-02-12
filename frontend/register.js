@@ -211,6 +211,7 @@ class RegisterForm {
             username: document.getElementById('username').value.trim(),
             email: document.getElementById('email').value.trim(),
             password: document.getElementById('password').value,
+			password2: document.getElementById('password2').value,
             role: document.getElementById('role').value,
             first_name: document.getElementById('firstName').value.trim() || '',
             last_name: document.getElementById('lastName').value.trim() || '',

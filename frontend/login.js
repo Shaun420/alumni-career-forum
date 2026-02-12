@@ -1,5 +1,5 @@
 /**
- * Login Form Handler for CareerPath Alumni Forum
+ * Login Form Handler for CareerBridge Alumni Forum
  */
 class LoginForm {
     constructor() {

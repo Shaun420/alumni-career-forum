@@ -1,5 +1,5 @@
 /**
- * Shared Header Component for CareerPath Alumni Forum
+ * Shared Header Component for CareerBridge Alumni Forum
  * Include this file in all pages for consistent navigation
  */
 
@@ -151,7 +151,7 @@ const Header = {
                     <!-- Logo -->
                     <a href="index.html" class="nav-logo">
                         <span class="nav-logo-icon">🎓</span>
-                        <span class="nav-logo-text">CareerPath</span>
+                        <span class="nav-logo-text">CareerBridge</span>
                     </a>
                     
                     <!-- Navigation Links -->
@@ -218,7 +218,7 @@ const Header = {
                             </div>
                         </div>
                         <div class="nav-dropdown-divider"></div>
-                        <a href="dashboard.html" class="nav-dropdown-item">📊 Dashboard</a>
+                        <a href="profile.html" class="nav-dropdown-item">👤 Profile</a>
                         <div class="nav-dropdown-divider"></div>
                         <button class="nav-dropdown-item nav-logout-btn" id="navLogoutBtn">🚪 Logout</button>
                     </div>
@@ -347,6 +347,7 @@ const Header = {
             .site-nav {
                 background: #2c3e50;
                 position: sticky;
+                padding: 15px 0;
                 top: 0;
                 z-index: 1000;
                 box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);

@@ -1,45 +1,42 @@
-// API URLs
+/**
+ * Explore Page - Journey Cards + Detail View
+ * 
+ * Features:
+ * - Grid of journey cards with search and filter
+ * - Click card to open detail view
+ * - Comments with auto role from user account
+ * - Edit/Delete own comments, Admin can delete any
+ */
+
 const API_URL = "http://localhost:8000/api/posts/";
-const AUTH_API_URL = "http://localhost:8000/api/auth/";
 
-// Current user state
-let currentUser = null;
+// State
+let allPosts = [];
+let currentFilter = 'all';
+let currentSearch = '';
+let currentDetailPost = null;
 
 // ============================================
-// TOKEN MANAGEMENT
+// HELPERS
 // ============================================
 
-// Get token from localStorage
-function getAuthToken() {
-    return localStorage.getItem('authToken');
+function getCurrentUser() {
+    return window.Header ? Header.currentUser : null;
 }
 
-// Get authorization headers for API requests
 function getAuthHeaders() {
-    const token = getAuthToken();
-    const headers = {
-        'Content-Type': 'application/json',
-    };
-    
-    if (token) {
-        headers['Authorization'] = `Token ${token}`;
-    }
-    
-    return headers;
+    return window.Header ? Header.getAuthHeaders() : { 'Content-Type': 'application/json' };
 }
 
-// Clear authentication data
-function clearAuth() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    currentUser = null;
+function isLoggedIn() {
+    return window.Header ? Header.isLoggedIn() : false;
 }
 
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
+function showNotification(message, type) {
+    if (window.Header) Header.showNotification(message, type);
+    else alert(message);
+}
 
-// Escape HTML to prevent XSS
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -47,195 +44,19 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Show notification message
-function showNotification(message, type = 'success') {
-    // Remove existing notification
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) existingNotification.remove();
-
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">${getNotificationIcon(type)}</span>
-            <span class="notification-message">${escapeHtml(message)}</span>
-            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
-        </div>
-    `;
-    
-    // Add notification styles if not present
-    addNotificationStyles();
-    
-    document.body.appendChild(notification);
-    
-    // Animate in
-    requestAnimationFrame(() => notification.classList.add('show'));
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-    }, 5000);
-}
-
-function getNotificationIcon(type) {
-    const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
-    return icons[type] || icons.info;
-}
-
-function addNotificationStyles() {
-    if (document.getElementById('notification-styles')) return;
-    
-    const style = document.createElement('style');
-    style.id = 'notification-styles';
-    style.textContent = `
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
-            transform: translateX(120%);
-            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            max-width: 400px;
-        }
-        .notification.show {
-            transform: translateX(0);
-        }
-        .notification-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            color: white;
-        }
-        .notification.success .notification-content {
-            background: linear-gradient(135deg, #28a745, #20c997);
-        }
-        .notification.error .notification-content {
-            background: linear-gradient(135deg, #dc3545, #c82333);
-        }
-        .notification.warning .notification-content {
-            background: linear-gradient(135deg, #ffc107, #e0a800);
-            color: #333;
-        }
-        .notification.info .notification-content {
-            background: linear-gradient(135deg, #17a2b8, #138496);
-        }
-        .notification-icon { font-size: 1.3rem; font-weight: bold; }
-        .notification-message { flex: 1; font-size: 0.95rem; }
-        .notification-close {
-            background: none;
-            border: none;
-            color: inherit;
-            font-size: 1.4rem;
-            cursor: pointer;
-            opacity: 0.8;
-            padding: 0;
-        }
-        .notification-close:hover { opacity: 1; }
-        @media (max-width: 480px) {
-            .notification { left: 15px; right: 15px; max-width: none; }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Format date
 function formatDate(dateString) {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
     });
 }
 
-// ============================================
-// AUTHENTICATION FUNCTIONS
-// ============================================
-
-// Check if user is logged in using token
-async function checkAuthStatus() {
-    const token = getAuthToken();
-    
-    if (!token) {
-        console.log('No token found, user not authenticated');
-        currentUser = null;
-        updateAuthUI();
-        return null;
-    }
-    
-    console.log('Token found, verifying...');
-    
-    try {
-        const response = await fetch(`${AUTH_API_URL}profile/`, {
-            method: 'GET',
-            headers: getAuthHeaders()
-        });
-        
-        if (response.ok) {
-            currentUser = await response.json();
-            console.log('User authenticated:', currentUser.username);
-            // Update localStorage with fresh user data
-            localStorage.setItem('user', JSON.stringify(currentUser));
-            updateAuthUI();
-            return currentUser;
-        } else if (response.status === 401) {
-            console.log('Token invalid or expired');
-            clearAuth();
-            updateAuthUI();
-            return null;
-        }
-    } catch (error) {
-        console.error('Auth check error:', error);
-    }
-    
-    currentUser = null;
-    updateAuthUI();
-    return null;
-}
-
-// Update authentication UI in navigation
-function updateAuthUI() {
-    const authLinks = document.getElementById('authLinks');
-    if (!authLinks) return;
-    
-    if (currentUser) {
-        const isAdmin = currentUser.is_staff ? ' <span class="admin-badge">(Admin)</span>' : '';
-        const roleDisplay = currentUser.role ? ` • ${capitalizeFirst(currentUser.role)}` : '';
-        
-        authLinks.innerHTML = `
-            <div class="user-menu">
-                <span class="user-info">
-                    <span class="user-avatar">${escapeHtml(currentUser.username.charAt(0).toUpperCase())}</span>
-                    <span class="user-details">
-                        <span class="user-name">${escapeHtml(currentUser.username)}${isAdmin}</span>
-                        <span class="user-role">${roleDisplay}</span>
-                    </span>
-                </span>
-                <div class="user-actions">
-                    <a href="dashboard.html" class="nav-btn">Dashboard</a>
-                    <button id="logoutBtn" class="nav-btn logout-btn">Logout</button>
-                </div>
-            </div>
-        `;
-        
-        // Add logout handler
-        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    } else {
-        authLinks.innerHTML = `
-            <a href="login.html" class="nav-btn">Login</a>
-            <a href="register.html" class="nav-btn btn-primary">Register</a>
-        `;
-    }
-    
-    // Update comment forms based on auth status
-    updateCommentFormsVisibility();
+function formatDateTime(dateString) {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
 }
 
 function capitalizeFirst(str) {
@@ -243,343 +64,368 @@ function capitalizeFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-// Update comment forms visibility based on auth status
-function updateCommentFormsVisibility() {
-    const postCards = document.querySelectorAll('.post-card');
-    
-    postCards.forEach(card => {
-        const postId = card.dataset.postId;
-        const existingForm = card.querySelector('.comment-form-container, .comment-login-prompt');
-        
-        if (existingForm && postId) {
-            existingForm.outerHTML = createCommentFormHtml(postId);
-            
-            // Re-attach form listener
-            const newForm = card.querySelector('.comment-form');
-            if (newForm) {
-                newForm.addEventListener('submit', handleCommentSubmit);
-            }
-        }
-    });
+function truncateText(text, maxLength = 120) {
+    if (!text || text.length <= maxLength) return text || '';
+    return text.substring(0, maxLength).trim() + '...';
 }
 
-// Handle logout
-async function handleLogout(e) {
-    if (e) e.preventDefault();
-    
-    const token = getAuthToken();
-    
-    if (token) {
-        try {
-            await fetch(`${AUTH_API_URL}logout/`, {
-                method: 'POST',
-                headers: getAuthHeaders()
-            });
-            console.log('Logout request sent');
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
+function getSkillsList(post) {
+    if (post.skills_list && Array.isArray(post.skills_list) && post.skills_list.length > 0) {
+        return post.skills_list;
     }
-    
-    // Clear auth regardless of API response
-    clearAuth();
-    showNotification('Logged out successfully', 'success');
-    updateAuthUI();
-    
-    // Refresh posts to update comment UI
-    fetchAndRenderPosts();
+    if (post.skills && typeof post.skills === 'string' && post.skills.trim()) {
+        return post.skills.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [];
 }
 
 // ============================================
-// POSTS FUNCTIONS
+// VIEW SWITCHING
 // ============================================
 
-// Fetch and render posts with comments
-async function fetchAndRenderPosts(filter = "all") {
-    const postsContainer = document.getElementById("postsContainer");
-    
-    if (!postsContainer) return;
-    
-    postsContainer.innerHTML = `
+function showListView() {
+    document.getElementById('exploreView').style.display = 'block';
+    document.getElementById('detailView').style.display = 'none';
+    currentDetailPost = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showDetailView(postId) {
+    const post = allPosts.find(p => p.id === postId);
+    if (!post) {
+        showNotification('Post not found.', 'error');
+        return;
+    }
+
+    currentDetailPost = post;
+
+    document.getElementById('exploreView').style.display = 'none';
+    document.getElementById('detailView').style.display = 'block';
+
+    renderDetailView(post);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================
+// FETCH POSTS
+// ============================================
+
+async function fetchPosts() {
+    const grid = document.getElementById('journeyGrid');
+    grid.innerHTML = `
         <div class="loading-container">
             <div class="loading-spinner"></div>
-            <p>Loading posts...</p>
+            <p>Loading journeys...</p>
         </div>
     `;
-    
+
     try {
-        const url = filter === "all" ? API_URL : `${API_URL}?category=${filter}`;
-        
-        const response = await fetch(url, {
+        const response = await fetch(API_URL, {
             method: 'GET',
             headers: getAuthHeaders()
         });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const posts = await response.json();
-        renderPosts(posts);
+
+        if (!response.ok) throw new Error('Failed to fetch');
+
+        allPosts = await response.json();
+        renderGrid();
+
     } catch (error) {
         console.error('Error fetching posts:', error);
-        postsContainer.innerHTML = `
+        grid.innerHTML = `
             <div class="error-container">
-                <div class="error-icon">⚠️</div>
-                <h3>Error loading posts</h3>
-                <p>Please make sure the Django server is running at ${API_URL}</p>
-                <button onclick="fetchAndRenderPosts()" class="retry-btn">🔄 Retry</button>
+                <p>⚠️ Error loading journeys.</p>
+                <p>Make sure the server is running.</p>
+                <button class="retry-btn" onclick="fetchPosts()">Retry</button>
             </div>
         `;
     }
 }
 
-// Render posts to DOM
-function renderPosts(posts) {
-    const postsContainer = document.getElementById("postsContainer");
-    postsContainer.innerHTML = "";
+// ============================================
+// RENDER GRID (Card List)
+// ============================================
 
-    if (!posts || posts.length === 0) {
-        postsContainer.innerHTML = `
-            <div class="no-posts">
-                <div class="no-posts-icon">📝</div>
-                <h3>No posts found</h3>
-                <p>Be the first to share your career experience!</p>
+function renderGrid() {
+    const grid = document.getElementById('journeyGrid');
+    let filtered = allPosts;
+
+    // Apply category filter
+    if (currentFilter && currentFilter !== 'all') {
+        filtered = filtered.filter(p => p.category === currentFilter);
+    }
+
+    // Apply search
+    if (currentSearch) {
+        const q = currentSearch.toLowerCase();
+        filtered = filtered.filter(p =>
+            (p.name && p.name.toLowerCase().includes(q)) ||
+            (p.role && p.role.toLowerCase().includes(q)) ||
+            (p.experience && p.experience.toLowerCase().includes(q)) ||
+            (p.company && p.company.toLowerCase().includes(q)) ||
+            (p.skills && p.skills.toLowerCase().includes(q))
+        );
+    }
+
+    // Update results count
+    const countEl = document.getElementById('resultsCount');
+    if (countEl) {
+        countEl.textContent = `${filtered.length} journey${filtered.length !== 1 ? 's' : ''} found`;
+    }
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-grid">
+                <div class="empty-grid-icon">🔍</div>
+                <h3>No journeys found</h3>
+                <p>Try a different filter or search term.</p>
             </div>
         `;
         return;
     }
 
-    posts.forEach(post => {
-        const postCard = createPostCard(post);
-        postsContainer.appendChild(postCard);
+    grid.innerHTML = filtered.map(post => createCardHtml(post)).join('');
+
+    // Add click handlers
+    grid.querySelectorAll('.journey-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const postId = parseInt(card.dataset.postId);
+            showDetailView(postId);
+        });
     });
 }
 
-// Create a post card with comments
-function createPostCard(post) {
-    const card = document.createElement("div");
-    card.classList.add("post-card");
-    card.dataset.postId = post.id;
-    
-    const commentsHtml = renderComments(post.comments || [], post.id);
-    const commentFormHtml = createCommentFormHtml(post.id);
-    
-    // Skills tags
-    const skillsHtml = post.skills_list && post.skills_list.length > 0
-        ? `<div class="post-skills">
-            ${post.skills_list.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join('')}
-           </div>`
+function createCardHtml(post) {
+    const skills = getSkillsList(post);
+    const skillsHtml = skills.length > 0
+        ? `<div class="card-skills">${skills.slice(0, 4).map(s => `<span class="card-skill-tag">${escapeHtml(s)}</span>`).join('')}${skills.length > 4 ? `<span class="card-skill-tag">+${skills.length - 4}</span>` : ''}</div>`
         : '';
-    
-    card.innerHTML = `
-        <div class="post-header">
-            <div class="post-author-avatar">${escapeHtml(post.name.charAt(0).toUpperCase())}</div>
-            <div class="post-author-info">
-                <h3>${escapeHtml(post.name)}</h3>
-                <p class="post-role">${escapeHtml(post.role)}${post.company ? ` at ${escapeHtml(post.company)}` : ''}</p>
-                <span class="post-category-badge">${escapeHtml(post.category_display || post.category)}</span>
+
+    const commentsCount = post.comments ? post.comments.length : (post.comments_count || 0);
+
+    return `
+        <div class="journey-card" data-post-id="${post.id}">
+            <div class="journey-card-header">
+                <div class="card-avatar">${escapeHtml(post.name.charAt(0).toUpperCase())}</div>
+                <div class="card-author-info">
+                    <div class="card-author-name">${escapeHtml(post.name)}</div>
+                    <div class="card-author-company">${post.company ? escapeHtml(post.company) : ''}</div>
+                </div>
+                <span class="card-category">${escapeHtml(post.category_display || capitalizeFirst(post.category || ''))}</span>
             </div>
-        </div>
-        <div class="post-content">
-            <p>${escapeHtml(post.experience)}</p>
+            <div class="card-role">${escapeHtml(post.role)}</div>
+            <p class="card-excerpt">${escapeHtml(truncateText(post.experience, 140))}</p>
             ${skillsHtml}
-        </div>
-        <div class="post-actions">
-            <button class="like-btn" onclick="likePost(${post.id})" title="Like this post">
-                ❤️ <span id="likes-${post.id}">${post.likes || 0}</span>
-            </button>
-            <span class="post-date">📅 ${formatDate(post.created_at)}</span>
-        </div>
-        <div class="comments-section">
-            <h4>💬 Comments (<span id="comment-count-${post.id}">${post.comments ? post.comments.length : 0}</span>)</h4>
-            <div class="comments-list" id="comments-${post.id}">
-                ${commentsHtml}
+            <div class="card-footer">
+                <div class="card-stats">
+                    <span class="card-stat">❤️ ${post.likes || 0}</span>
+                    <span class="card-stat">💬 ${commentsCount}</span>
+                </div>
+                <span class="card-read-more">Read more →</span>
             </div>
-            ${commentFormHtml}
         </div>
     `;
-    
-    // Add event listener for comment form submission
-    const form = card.querySelector('.comment-form');
-    if (form) {
-        form.addEventListener('submit', handleCommentSubmit);
-    }
-    
-    return card;
 }
 
-// Like a post
-async function likePost(postId) {
-    try {
-        const response = await fetch(`${API_URL}${postId}/like/`, {
-            method: 'POST',
-            headers: getAuthHeaders()
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            const likesElement = document.getElementById(`likes-${postId}`);
-            if (likesElement) {
-                likesElement.textContent = data.likes;
-                // Add animation
-                likesElement.parentElement.classList.add('liked');
-                setTimeout(() => likesElement.parentElement.classList.remove('liked'), 300);
-            }
-        }
-    } catch (error) {
-        console.error('Error liking post:', error);
-        showNotification('Error liking post', 'error');
+// ============================================
+// RENDER DETAIL VIEW
+// ============================================
+
+function renderDetailView(post) {
+    const container = document.getElementById('detailContent');
+    const skills = getSkillsList(post);
+    const user = getCurrentUser();
+    const comments = post.comments || [];
+
+    const skillsHtml = skills.length > 0
+        ? `<div class="detail-section">
+                <h3 class="detail-section-title">🛠️ Key Skills</h3>
+                <div class="detail-skills-list">
+                    ${skills.map(s => `<span class="detail-skill">${escapeHtml(s)}</span>`).join('')}
+                </div>
+           </div>`
+        : '';
+
+    container.innerHTML = `
+        <div class="detail-card">
+            <div class="detail-hero">
+                <div class="detail-author-row">
+                    <div class="detail-avatar">${escapeHtml(post.name.charAt(0).toUpperCase())}</div>
+                    <div class="detail-author-info">
+                        <h2>${escapeHtml(post.role)}</h2>
+                        <p class="detail-author-company">by ${escapeHtml(post.name)}${post.company ? ` at ${escapeHtml(post.company)}` : ''}</p>
+                    </div>
+                </div>
+                <div class="detail-meta">
+                    <span class="detail-meta-tag">${escapeHtml(post.category_display || capitalizeFirst(post.category || ''))}</span>
+                    <span class="detail-meta-tag">📅 ${formatDate(post.created_at)}</span>
+                    <span class="detail-meta-tag">❤️ ${post.likes || 0} likes</span>
+                    <span class="detail-meta-tag">💬 ${comments.length} comments</span>
+                </div>
+            </div>
+
+            <div class="detail-body">
+                <div class="detail-section">
+                    <h3 class="detail-section-title">➤ Career Journey</h3>
+                    <div class="detail-experience">${escapeHtml(post.experience)}</div>
+                </div>
+
+                ${skillsHtml}
+
+                <div class="detail-actions">
+                    <button class="detail-like-btn" onclick="likePost(${post.id})">
+                        ❤️ Like <span id="detail-likes-${post.id}">${post.likes || 0}</span>
+                    </button>
+                    <span class="detail-date">Posted on ${formatDateTime(post.created_at)}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments -->
+        <div class="comments-card">
+            <div class="comments-header">
+                <h3>💬 Comments</h3>
+                <span class="comments-count-badge" id="detail-comment-count">${comments.length}</span>
+            </div>
+            <div class="comments-body">
+                <div class="comment-list" id="detail-comment-list">
+                    ${renderCommentList(comments, post.id)}
+                </div>
+                <div class="comment-form-section">
+                    ${renderCommentForm(post.id)}
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Attach comment form handler
+    const commentForm = container.querySelector('.comment-compose-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', (e) => handleCommentSubmit(e, post.id));
     }
 }
 
 // ============================================
-// COMMENTS FUNCTIONS
+// COMMENTS
 // ============================================
 
-// Create comment form HTML
-function createCommentFormHtml(postId) {
-    if (!currentUser) {
+function renderCommentList(comments, postId) {
+    if (!comments || comments.length === 0) {
         return `
-            <div class="comment-login-prompt">
-                <p>🔒 Please <a href="login.html">login</a> to post a comment.</p>
+            <div class="comment-empty">
+                <div class="comment-empty-icon">💬</div>
+                <p>No comments yet. Be the first to share your thoughts!</p>
             </div>
         `;
     }
-    
-    // Pre-select user's role if available
-    const userRole = currentUser.role || '';
-    
-    return `
-        <div class="comment-form-container">
-            <h5>💭 Add a Comment</h5>
-            <form class="comment-form" data-post-id="${postId}">
-                <div class="comment-user-info">
-                    <span class="comment-avatar">${escapeHtml(currentUser.username.charAt(0).toUpperCase())}</span>
-                    <span class="comment-as">Commenting as <strong>${escapeHtml(currentUser.username)}</strong></span>
-                    ${currentUser.is_staff ? '<span class="admin-indicator">👑 Admin</span>' : ''}
-                </div>
-                <div class="form-group">
-                    <select class="comment-role" required>
-                        <option value="">Select Your Role</option>
-                        <option value="student" ${userRole === 'student' ? 'selected' : ''}>Student</option>
-                        <option value="alumni" ${userRole === 'alumni' ? 'selected' : ''}>Alumni</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <textarea class="comment-content" placeholder="Share your thoughts, ask questions..." required minlength="5" rows="3"></textarea>
-                </div>
-                <button type="submit" class="submit-comment-btn">
-                    <span class="btn-text">Post Comment</span>
-                    <span class="btn-loading" style="display: none;">Posting...</span>
-                </button>
-            </form>
-        </div>
-    `;
+
+    return comments.map(comment => renderCommentItem(comment, postId)).join('');
 }
 
-// Render comments HTML
-function renderComments(comments, postId) {
-    if (!comments || comments.length === 0) {
-        return '<p class="no-comments">No comments yet. Be the first to share your thoughts!</p>';
-    }
-    
-    return comments.map(comment => createCommentHtml(comment, postId)).join('');
-}
+function renderCommentItem(comment, postId) {
+    const user = getCurrentUser();
+    const isOwner = user && comment.is_owner;
+    const canDelete = user && comment.can_delete;
+    const editedBadge = comment.is_edited ? '<span class="comment-edited-badge">(edited)</span>' : '';
 
-// Create single comment HTML
-function createCommentHtml(comment, postId) {
-    const isOwner = currentUser && comment.is_owner;
-    const canDelete = currentUser && comment.can_delete;
-    const editedBadge = comment.is_edited ? '<span class="edited-badge">(edited)</span>' : '';
-    
-    let actionButtons = '';
-    
+    // Determine role badge
+    const role = comment.author_role || 'student';
+    const roleBadgeClass = role === 'admin' ? 'admin' : role;
+
+    let actions = '';
     if (isOwner || canDelete) {
-        actionButtons = '<div class="comment-actions">';
-        
+        actions = '<div class="comment-actions-group">';
         if (isOwner) {
-            actionButtons += `
-                <button class="edit-comment-btn" onclick="showEditForm(${postId}, ${comment.id})" title="Edit your comment">
-                    ✏️ Edit
-                </button>
-            `;
+            actions += `<button class="comment-action-btn" onclick="showEditComment(${postId}, ${comment.id})">✏️ Edit</button>`;
         }
-        
         if (canDelete) {
-            const deleteLabel = currentUser.is_staff && !isOwner ? '🗑️ Admin Delete' : '🗑️ Delete';
-            actionButtons += `
-                <button class="delete-comment-btn" onclick="deleteComment(${postId}, ${comment.id})" title="Delete comment">
-                    ${deleteLabel}
-                </button>
-            `;
+            const label = user.is_staff && !isOwner ? '🗑️ Admin' : '🗑️';
+            actions += `<button class="comment-action-btn delete-btn" onclick="deleteComment(${postId}, ${comment.id})">${label}</button>`;
         }
-        
-        actionButtons += '</div>';
+        actions += '</div>';
     }
-    
+
     return `
-        <div class="comment" id="comment-${comment.id}" data-comment-id="${comment.id}">
-            <div class="comment-header">
-                <div class="comment-author">
+        <div class="comment-item" id="comment-${comment.id}">
+            <div class="comment-item-header">
+                <div class="comment-author-info">
                     <span class="comment-avatar">${escapeHtml(comment.author_name.charAt(0).toUpperCase())}</span>
-                    <span class="comment-name">${escapeHtml(comment.author_name)}</span>
-                    <span class="comment-role-badge ${comment.author_role}">${escapeHtml(comment.author_role)}</span>
+                    <span class="comment-author-name">${escapeHtml(comment.author_name)}</span>
+                    <span class="comment-role-badge ${roleBadgeClass}">${capitalizeFirst(role)}</span>
                     ${editedBadge}
                 </div>
-                ${actionButtons}
+                ${actions}
             </div>
-            <div class="comment-body" id="comment-body-${comment.id}">
+            <div class="comment-body-content" id="comment-body-${comment.id}">
                 <p class="comment-text">${escapeHtml(comment.content)}</p>
             </div>
-            <div class="comment-footer">
-                <span class="comment-date">📅 ${formatDate(comment.created_at)}</span>
+            <div class="comment-item-footer">
+                📅 ${formatDateTime(comment.created_at)}
             </div>
         </div>
     `;
 }
 
-// Handle comment submission
-async function handleCommentSubmit(e) {
+function renderCommentForm(postId) {
+    const user = getCurrentUser();
+
+    if (!user) {
+        return `
+            <div class="comment-login-prompt">
+                🔒 Please <a href="login.html">login</a> to post a comment.
+            </div>
+        `;
+    }
+
+    const userRole = user.role || 'student';
+    const roleBadgeClass = userRole === 'admin' ? 'admin' : userRole;
+
+    return `
+        <div class="comment-form-title">💭 Add a Comment</div>
+        <form class="comment-compose comment-compose-form" data-post-id="${postId}">
+            <div class="comment-compose-header">
+                <span class="comment-avatar" style="width:28px;height:28px;font-size:0.75rem;">${escapeHtml(user.username.charAt(0).toUpperCase())}</span>
+                <span>Commenting as <strong>${escapeHtml(user.username)}</strong></span>
+                <span class="compose-role ${roleBadgeClass}">${capitalizeFirst(userRole)}</span>
+            </div>
+            <textarea placeholder="Share your thoughts, ask questions, or offer advice..." required minlength="5" rows="3"></textarea>
+            <button type="submit" class="comment-submit-btn" id="comment-submit-${postId}">
+                Post Comment
+            </button>
+        </form>
+    `;
+}
+
+// Submit Comment
+async function handleCommentSubmit(e, postId) {
     e.preventDefault();
-    
-    if (!currentUser) {
-        showNotification('Please login to post a comment.', 'error');
-        window.location.href = 'login.html';
+
+    const user = getCurrentUser();
+    if (!user) {
+        showNotification('Please login to comment.', 'error');
         return;
     }
-    
+
     const form = e.target;
-    const postId = form.dataset.postId;
-    const roleSelect = form.querySelector('.comment-role');
-    const contentTextarea = form.querySelector('.comment-content');
-    const submitBtn = form.querySelector('.submit-comment-btn');
-    const btnText = submitBtn.querySelector('.btn-text');
-    const btnLoading = submitBtn.querySelector('.btn-loading');
-    
-    // Validate
-    if (!roleSelect.value) {
-        showNotification('Please select your role.', 'error');
-        roleSelect.focus();
-        return;
-    }
-    
-    if (contentTextarea.value.trim().length < 5) {
+    const textarea = form.querySelector('textarea');
+    const submitBtn = form.querySelector('.comment-submit-btn');
+    const content = textarea.value.trim();
+
+    if (content.length < 5) {
         showNotification('Comment must be at least 5 characters.', 'error');
-        contentTextarea.focus();
+        textarea.focus();
         return;
     }
-    
-    // Disable button during submission
+
     submitBtn.disabled = true;
-    if (btnText) btnText.style.display = 'none';
-    if (btnLoading) btnLoading.style.display = 'inline';
-    
+    submitBtn.textContent = 'Posting...';
+
+    // Role is taken from user's account, not from a select
     const commentData = {
-        author_role: roleSelect.value,
-        content: contentTextarea.value.trim()
+        author_role: user.role || 'student',
+        content: content
     };
-    
+
     try {
         const response = await fetch(`${API_URL}${postId}/comments/`, {
             method: 'POST',
@@ -589,212 +435,173 @@ async function handleCommentSubmit(e) {
 
         if (response.status === 401) {
             showNotification('Session expired. Please login again.', 'error');
-            clearAuth();
-            updateAuthUI();
-            window.location.href = 'login.html';
-            return;
-        }
-
-        if (response.status === 403) {
-            showNotification('You do not have permission to post comments.', 'error');
             return;
         }
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || error.detail || 'Failed to post comment');
+            const err = await response.json();
+            throw new Error(err.error || err.detail || 'Failed to post');
         }
 
-        // Success - refresh comments
-        await refreshPostComments(postId);
-        
-        // Reset form
-        form.reset();
-        
-        showNotification('Comment posted successfully! 🎉', 'success');
-        
+        // Refresh comments
+        await refreshDetailComments(postId);
+        textarea.value = '';
+        showNotification('Comment posted! 🎉', 'success');
+
     } catch (error) {
         console.error('Error posting comment:', error);
-        showNotification(error.message || 'Error posting comment. Please try again.', 'error');
+        showNotification(error.message || 'Error posting comment.', 'error');
     } finally {
         submitBtn.disabled = false;
-        if (btnText) btnText.style.display = 'inline';
-        if (btnLoading) btnLoading.style.display = 'none';
+        submitBtn.textContent = 'Post Comment';
     }
 }
 
-// Show edit form for a comment
-function showEditForm(postId, commentId) {
-    const commentElement = document.getElementById(`comment-${commentId}`);
-    const commentBody = document.getElementById(`comment-body-${commentId}`);
-    const currentContent = commentBody.querySelector('.comment-text').textContent;
-    const currentRoleBadge = commentElement.querySelector('.comment-role-badge');
-    const currentRole = currentRoleBadge ? currentRoleBadge.textContent.toLowerCase() : 'student';
-    
-    // Store original values for cancel
-    commentBody.dataset.originalContent = currentContent;
-    commentBody.dataset.originalRole = currentRole;
-    
-    commentBody.innerHTML = `
+// Edit Comment
+function showEditComment(postId, commentId) {
+    const bodyEl = document.getElementById(`comment-body-${commentId}`);
+    const currentText = bodyEl.querySelector('.comment-text').textContent;
+
+    bodyEl.innerHTML = `
         <form class="edit-comment-form" id="edit-form-${commentId}">
-            <div class="form-group">
-                <select class="comment-role" required>
-                    <option value="student" ${currentRole === 'student' ? 'selected' : ''}>Student</option>
-                    <option value="alumni" ${currentRole === 'alumni' ? 'selected' : ''}>Alumni</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <textarea class="comment-content" required minlength="5" rows="3">${escapeHtml(currentContent)}</textarea>
-            </div>
-            <div class="edit-form-buttons">
-                <button type="submit" class="save-edit-btn">💾 Save</button>
-                <button type="button" class="cancel-edit-btn" onclick="cancelEdit(${postId}, ${commentId})">❌ Cancel</button>
+            <textarea required minlength="5" rows="3">${escapeHtml(currentText)}</textarea>
+            <div class="edit-comment-actions">
+                <button type="button" class="edit-cancel-btn" onclick="refreshDetailComments(${postId})">Cancel</button>
+                <button type="submit" class="edit-save-btn" id="edit-save-${commentId}">Save</button>
             </div>
         </form>
     `;
-    
-    // Focus on textarea
-    commentBody.querySelector('.comment-content').focus();
-    
-    // Add submit handler
-    document.getElementById(`edit-form-${commentId}`).addEventListener('submit', (e) => {
+
+    bodyEl.querySelector('textarea').focus();
+
+    document.getElementById(`edit-form-${commentId}`).addEventListener('submit', async (e) => {
         e.preventDefault();
-        updateComment(postId, commentId);
+        const textarea = e.target.querySelector('textarea');
+        const saveBtn = document.getElementById(`edit-save-${commentId}`);
+        const content = textarea.value.trim();
+
+        if (content.length < 5) {
+            showNotification('Comment must be at least 5 characters.', 'error');
+            return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        const user = getCurrentUser();
+
+        try {
+            const response = await fetch(`${API_URL}${postId}/comments/${commentId}/`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    author_role: user?.role || 'student',
+                    content: content
+                })
+            });
+
+            if (response.status === 403) {
+                showNotification('You can only edit your own comments.', 'error');
+                return;
+            }
+
+            if (!response.ok) throw new Error('Failed to update');
+
+            await refreshDetailComments(postId);
+            showNotification('Comment updated!', 'success');
+
+        } catch (error) {
+            console.error('Error updating:', error);
+            showNotification('Error updating comment.', 'error');
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+        }
     });
 }
 
-// Cancel edit and restore original content
-function cancelEdit(postId, commentId) {
-    const commentBody = document.getElementById(`comment-body-${commentId}`);
-    const originalContent = commentBody.dataset.originalContent || '';
-    
-    commentBody.innerHTML = `<p class="comment-text">${escapeHtml(originalContent)}</p>`;
-}
-
-// Update a comment
-async function updateComment(postId, commentId) {
-    const form = document.getElementById(`edit-form-${commentId}`);
-    const roleSelect = form.querySelector('.comment-role');
-    const contentTextarea = form.querySelector('.comment-content');
-    const saveBtn = form.querySelector('.save-edit-btn');
-    
-    // Validate
-    if (contentTextarea.value.trim().length < 5) {
-        showNotification('Comment must be at least 5 characters.', 'error');
-        contentTextarea.focus();
-        return;
-    }
-    
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
-    
-    const updateData = {
-        author_role: roleSelect.value,
-        content: contentTextarea.value.trim()
-    };
-    
-    try {
-        const response = await fetch(`${API_URL}${postId}/comments/${commentId}/`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(updateData)
-        });
-
-        if (response.status === 401) {
-            showNotification('Session expired. Please login again.', 'error');
-            clearAuth();
-            updateAuthUI();
-            return;
-        }
-
-        if (response.status === 403) {
-            showNotification('You can only edit your own comments.', 'error');
-            cancelEdit(postId, commentId);
-            return;
-        }
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to update comment');
-        }
-
-        await refreshPostComments(postId);
-        showNotification('Comment updated successfully! ✏️', 'success');
-        
-    } catch (error) {
-        console.error('Error updating comment:', error);
-        showNotification(error.message || 'Error updating comment.', 'error');
-        saveBtn.disabled = false;
-        saveBtn.textContent = '💾 Save';
-    }
-}
-
-// Delete a comment
+// Delete Comment
 async function deleteComment(postId, commentId) {
-    const isAdmin = currentUser && currentUser.is_staff;
-    const confirmMessage = isAdmin 
-        ? 'Are you sure you want to delete this comment? (Admin action)'
-        : 'Are you sure you want to delete your comment?';
-    
-    if (!confirm(confirmMessage)) return;
-    
+    if (!confirm('Delete this comment?')) return;
+
     try {
         const response = await fetch(`${API_URL}${postId}/comments/${commentId}/`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
 
-        if (response.status === 401) {
-            showNotification('Session expired. Please login again.', 'error');
-            clearAuth();
-            updateAuthUI();
-            return;
-        }
-
         if (response.status === 403) {
-            showNotification('You do not have permission to delete this comment.', 'error');
+            showNotification('Permission denied.', 'error');
             return;
         }
 
-        if (!response.ok && response.status !== 204) {
-            throw new Error('Failed to delete comment');
-        }
+        if (!response.ok && response.status !== 204) throw new Error('Failed to delete');
 
-        await refreshPostComments(postId);
-        showNotification('Comment deleted successfully! 🗑️', 'success');
-        
+        await refreshDetailComments(postId);
+        showNotification('Comment deleted.', 'success');
+
     } catch (error) {
-        console.error('Error deleting comment:', error);
-        showNotification('Error deleting comment. Please try again.', 'error');
+        console.error('Error deleting:', error);
+        showNotification('Error deleting comment.', 'error');
     }
 }
 
-// Refresh comments for a specific post
-async function refreshPostComments(postId) {
+// Refresh comments in detail view
+async function refreshDetailComments(postId) {
     try {
         const response = await fetch(`${API_URL}${postId}/comments/`, {
-            method: 'GET',
             headers: getAuthHeaders()
         });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch comments');
-        }
-        
+
+        if (!response.ok) throw new Error('Failed to fetch comments');
+
         const comments = await response.json();
-        const commentsContainer = document.getElementById(`comments-${postId}`);
-        
-        if (commentsContainer) {
-            commentsContainer.innerHTML = renderComments(comments, postId);
-            
-            // Update comment count
-            const commentCount = document.getElementById(`comment-count-${postId}`);
-            if (commentCount) {
-                commentCount.textContent = comments.length;
+
+        // Update comment list
+        const listEl = document.getElementById('detail-comment-list');
+        if (listEl) listEl.innerHTML = renderCommentList(comments, postId);
+
+        // Update count
+        const countEl = document.getElementById('detail-comment-count');
+        if (countEl) countEl.textContent = comments.length;
+
+        // Update the post in allPosts
+        const postIndex = allPosts.findIndex(p => p.id === postId);
+        if (postIndex !== -1) {
+            allPosts[postIndex].comments = comments;
+        }
+
+    } catch (error) {
+        console.error('Error refreshing comments:', error);
+    }
+}
+
+// Like Post
+async function likePost(postId) {
+    try {
+        const response = await fetch(`${API_URL}${postId}/like/`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            // Update detail view
+            const likesEl = document.getElementById(`detail-likes-${postId}`);
+            if (likesEl) {
+                likesEl.textContent = data.likes;
+                likesEl.parentElement.classList.add('liked');
+                setTimeout(() => likesEl.parentElement.classList.remove('liked'), 300);
+            }
+
+            // Update allPosts
+            const postIndex = allPosts.findIndex(p => p.id === postId);
+            if (postIndex !== -1) {
+                allPosts[postIndex].likes = data.likes;
             }
         }
     } catch (error) {
-        console.error('Error refreshing comments:', error);
+        console.error('Error liking post:', error);
     }
 }
 
@@ -803,26 +610,57 @@ async function refreshPostComments(postId) {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('Explore page loaded');
-    console.log('Token exists:', !!getAuthToken());
-    
-    // Check auth status first
-    await checkAuthStatus();
-    
-    // Then fetch and render posts
-    await fetchAndRenderPosts();
-    
-    // Filter functionality
+    // Wait for Header
+    await new Promise(resolve => {
+        const check = setInterval(() => {
+            if (window.Header && Header.initialized) { clearInterval(check); resolve(); }
+        }, 50);
+        setTimeout(() => { clearInterval(check); resolve(); }, 3000);
+    });
+
+    // Fetch posts
+    await fetchPosts();
+
+    // Back button
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', showListView);
+    }
+
+    // Filter
     const categoryFilter = document.getElementById('categoryFilter');
     if (categoryFilter) {
         categoryFilter.addEventListener('change', (e) => {
-            fetchAndRenderPosts(e.target.value);
+            currentFilter = e.target.value;
+            renderGrid();
         });
     }
+
+    // Search with debounce
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        let debounce;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounce);
+            debounce = setTimeout(() => {
+                currentSearch = e.target.value.trim();
+                renderGrid();
+            }, 300);
+        });
+    }
+
+    // Handle browser back button
+    window.addEventListener('popstate', () => {
+        if (currentDetailPost) {
+            showListView();
+        }
+    });
 });
 
-// Make functions globally available for onclick handlers
+// Global functions for onclick handlers
 window.likePost = likePost;
-window.showEditForm = showEditForm;
-window.cancelEdit = cancelEdit;
+window.showEditComment = showEditComment;
 window.deleteComment = deleteComment;
+window.refreshDetailComments = refreshDetailComments;
+window.showDetailView = showDetailView;
+window.fetchPosts = fetchPosts;
