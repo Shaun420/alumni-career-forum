@@ -1,7 +1,5 @@
 # Alumni Career Forum
 
-## Description
-
 A forum-based website where college alumni can share their career paths and experiences to help current and prospective students make informed career decisions. Alumni can post about their journey toward different job roles, and students can explore these posts by category to gain real-world insights.
 ## 👥 Authors
 - Bhushan Badhe
