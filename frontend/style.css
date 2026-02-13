@@ -38,7 +38,7 @@ body {
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 6px 20px rgba(255, 126, 66, 0.3);
-  border: 2px solid #FFB343;
+  outline: 2px solid #FFB343;
 }
 
 .card h3 {
@@ -395,7 +395,7 @@ footer {
 .testimonial-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(66, 234, 255, 0.3);
-  border: 2px solid #42EAFF;
+  outline: 2px solid #42EAFF;
 }
 
 .quote-icon {

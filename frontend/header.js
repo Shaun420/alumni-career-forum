@@ -150,7 +150,6 @@ const Header = {
                     
                     <!-- Logo -->
                     <a href="index.html" class="nav-logo">
-                        <span class="nav-logo-icon">🎓</span>
                         <span class="nav-logo-text">CareerBridge</span>
                     </a>
                     
@@ -375,19 +374,22 @@ const Header = {
                 flex-shrink: 0;
             }
             
-            .nav-logo-icon {
-                font-size: 1.8rem;
-            }
-            
             .nav-logo-text {
-                font-size: 1.45rem;
-                font-weight: 700;
-                letter-spacing: -0.3px;
-                background: linear-gradient(135deg, #FF7E42, #FFB343);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
+				content: url("images/logo2.png") / "CareerBridge";
+				background-repeat: no-repeat;
+				width: 300px;
+                // font-size: 1.45rem;
+                // font-weight: 700;
+                // letter-spacing: -0.3px;
+                // background: linear-gradient(135deg, #FF7E42, #FFB343);
+                // -webkit-background-clip: text;
+                // -webkit-text-fill-color: transparent;
+                // background-clip: text;
             }
+
+			// .nav-logo:hover {
+			// 	background: none;
+			// }
             
             /* ---- Nav Links ---- */
             
